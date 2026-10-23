@@ -4324,6 +4324,24 @@ if ($Log -and $script:logStream) {
 # MENU PRINCIPAL
 # ================================================================
 function Show-Menu {
+    # Geometria fija de la consola (igual que menu.ps1 y optimizador):
+    # 80 columnas para que el menu y los listados se lean comodos en
+    # cualquier tamano de ventana, tambien maximizada. El orden del resize
+    # depende de si se reduce o se amplia (medido en consola real).
+    try {
+        if ($Host.UI.RawUI.WindowSize.Width -ne 80) {
+            if ($Host.UI.RawUI.WindowSize.Width -gt 80) {
+                # reducir: primero la ventana, luego el buffer
+                $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(80, 30)
+                $Host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(80, 300)
+            } else {
+                # ampliar: primero el buffer, luego la ventana
+                $Host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(80, 300)
+                $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(80, 30)
+            }
+        }
+    } catch { }
+
     Clear-Host
     Write-Host ""
     Write-Host "  ╔══════════════════════════════════════════════════════╗" -ForegroundColor Cyan

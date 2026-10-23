@@ -14,9 +14,31 @@
 #   powershell.exe (existe en todo Win10/11): las herramientas que exigen
 #   PS7 (Optimizador, HerramientasIT) se lo traen solas con su arranque.
 # - Entrada protegida: sin consola interactiva se sale en limpio.
+# - Geometria: fija la consola en 80x30 para que el centrado quede comodo
+#   en cualquier tamano de ventana.
 # ============================================================================
 
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
+
+# --- Geometria fija de la consola ---------------------------------------------
+# El menu es "la aplicacion": fija 80x30 para verse comodo tanto en una
+# ventana maximizada (donde centrar a lo ancho deja margenes enormes) como
+# en una consola pequena (donde las cajas no cabrian). Si el host no deja
+# redimensionar (editores, redirecciones), se ignora y el centrado dinamico
+# se adapta al ancho que haya.
+try {
+    if ($Host.UI.RawUI.WindowSize.Width -ne 80) {
+        if ($Host.UI.RawUI.WindowSize.Width -gt 80) {
+            # reducir: primero la ventana, luego el buffer
+            $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(80, 30)
+            $Host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(80, 300)
+        } else {
+            # ampliar: primero el buffer, luego la ventana
+            $Host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(80, 300)
+            $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(80, 30)
+        }
+    }
+} catch { }
 
 # --- Configuracion -----------------------------------------------------------
 $script:Titulo       = 'Kit de Herramientas - José Orozco'

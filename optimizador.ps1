@@ -1082,6 +1082,24 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 $logDir = Split-Path $script:LogFile -Parent
 if (-not (Test-Path $logDir)) { New-Item $logDir -ItemType Directory -Force | Out-Null }
 
+# Geometria fija de la consola (igual que menu.ps1): 80 columnas para que
+# listados y logs se lean comodos en cualquier tamano de ventana, tambien
+# maximizada. El orden del resize depende de si se reduce o se amplia
+# (medido en consola real). try/catch: hosts sin resize, se ignora.
+try {
+    if ($Host.UI.RawUI.WindowSize.Width -ne 80) {
+        if ($Host.UI.RawUI.WindowSize.Width -gt 80) {
+            # reducir: primero la ventana, luego el buffer
+            $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(80, 30)
+            $Host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(80, 300)
+        } else {
+            # ampliar: primero el buffer, luego la ventana
+            $Host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(80, 300)
+            $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(80, 30)
+        }
+    }
+} catch { }
+
 Write-Log "Inicio de sesion"
 
 # Modo
