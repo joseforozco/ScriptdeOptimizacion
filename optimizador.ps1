@@ -815,6 +815,10 @@ function Invoke-SeccionTelemetria {
     Invoke-RegAdd "HKLM\Software\Policies\Microsoft\Windows\Windows Error Reporting" "Disabled" "REG_DWORD" "1" "WER off"
     Invoke-RegAdd "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo" "Enabled" "REG_DWORD" "0" "Publicidad off"
     Invoke-RegAdd "HKLM\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo" "DisabledByGroupPolicy" "REG_DWORD" "1" "Publicidad GP off"
+    # Refuerzos de WinUtil: experiencias personalizadas y prediccion de
+    # texto en la nube (entradas que faltaban en esta seccion).
+    Invoke-RegAdd "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Privacy" "TailoredExperiencesWithDiagnosticDataEnabled" "REG_DWORD" "0" "Experiencias personalizadas off"
+    Invoke-RegAdd "HKCU\SOFTWARE\Microsoft\Input\TIPC" "Enabled" "REG_DWORD" "0" "Prediccion de texto en la nube off"
 
     # --- OFFICE ---
     Write-Host "  Office..." -ForegroundColor DarkGray
@@ -861,7 +865,7 @@ function Invoke-SeccionServicios {
         "EFS","EapHost","EntAppSvc","FDResPub","FrameServer",
         "FrameServerMonitor","GraphicsPerfSvc","HvHost","IEEtwCollectorService",
         "InstallService","InventorySvc","KtmRm","LicenseManager",
-        "MSDTC","MSiSCSI","McpManagementService","MsKeyboardFilter",
+        "MSDTC","MSiSCSI","MapsBroker","McpManagementService","MsKeyboardFilter",
         "NPSMSvc","NaturalAuthentication","NcaSvc","NcbService",
         "NcdAutoSetup","NetSetupSvc","Netman","NgcCtnrSvc","NgcSvc",
         "NlaSvc","PNRPAutoReg","PcaSvc","PeerDistSvc","PenService",
@@ -949,6 +953,18 @@ function Invoke-SeccionUI {
     }
     Invoke-RegAdd "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" "HideFileExt" "REG_DWORD" "0" "Mostrar extensiones"
     Invoke-RegAdd "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" "ShowTaskViewButton" "REG_DWORD" "0" "Ocultar Task View"
+    # El menu clasico (y los ajustes de barra) solo se ven al recargar
+    # Explorer: se reinicia (parpadeo de ~2 segundos), como hace WinUtil.
+    # Sin esto la clave existia desde siempre pero el menu clasico no
+    # aparecia hasta cerrar y volver a abrir sesion.
+    if ($script:EsWin11 -and -not $script:ModoSim) {
+        Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
+        if (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) {
+            Start-Process -FilePath explorer.exe -ErrorAction SilentlyContinue
+        }
+        Write-Log "Explorer reiniciado para aplicar el menu clasico y la barra" "OK"
+    }
     Write-Log "UI optimizada" "OK"
 }
 
@@ -1062,6 +1078,66 @@ function Invoke-SeccionRegistros {
     # exista antes de tocarlo y respeta el modo simulacion.
     Invoke-ServiceAction "sysmain" "Disable"
     Write-Log "Registros adicionales aplicados" "OK"
+}
+
+# ================================================================
+# SECCION: BLOAT DE FABRICANTE Y SEGURIDAD (de Chris Titus WinUtil)
+# ================================================================
+# Opciones contrastadas de WinUtil que faltaban aqui: el bloat que los
+# fabricantes intentan meter al conectar dispositivos (Razer, Logitech,
+# companions de monitores), la puerta trasera WPBT de la BIOS, rutas
+# largas, apps en segundo plano globales, ubicacion denegada y hibernacion.
+function Invoke-SeccionFabricantes {
+    Write-Host "`n--- Bloat de fabricante y seguridad ---" -ForegroundColor Green
+
+    # 1) Co-instaladores de dispositivos: sin esto, al conectar un raton, un
+    #    teclado o un monitor puede instalarse solo el software del
+    #    fabricante (Razer Synapse y similares).
+    Invoke-RegAdd "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Device Installer" "DisableCoInstallers" "REG_DWORD" "1" "Co-instaladores de dispositivos off"
+    Invoke-RegAdd "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching" "SearchOrderConfig" "REG_DWORD" "0" "Descarga automatica de drivers off"
+    # 2) Companions del Store y metadatos de dispositivos descargados por red
+    Invoke-RegAdd "HKLM\SOFTWARE\Policies\Microsoft\Windows\Device Metadata" "PreventDeviceMetadataFromNetwork" "REG_DWORD" "1" "Metadatos de dispositivos por red off"
+    # 3) WPBT: tabla de la BIOS con la que el OEM puede ejecutar e instalar
+    #    software en el arranque sin consentimiento (riesgo de seguridad).
+    Invoke-RegAdd "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager" "DisableWpbtExecution" "REG_DWORD" "1" "WPBT (instalador del OEM) off"
+    # 4) Rutas de mas de 260 caracteres
+    Invoke-RegAdd "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" "LongPathsEnabled" "REG_DWORD" "1" "Rutas largas habilitadas"
+    # 5) Apps de Store en segundo plano: corte global (en Win11 tocaba app
+    #    por app)
+    Invoke-RegAdd "HKCU\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" "GlobalUserDisabled" "REG_DWORD" "1" "Apps en segundo plano off (global)"
+    # 6) Ubicacion denegada a nivel de maquina, sensor incluido
+    Invoke-RegAdd "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location" "Value" "REG_SZ" "Deny" "Ubicacion denegada"
+    Invoke-RegAdd "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Sensor\Overrides\{BFA794E4-F964-4FDB-90F6-51056BFE4B44}" "SensorPermissionState" "REG_DWORD" "0" "Sensor de ubicacion off"
+    Invoke-RegAdd "HKLM\SYSTEM\Maps" "AutoUpdateEnabled" "REG_DWORD" "0" "Auto-actualizacion de mapas off"
+
+    # 7) Hibernacion: libera hiberfil.sys (~ tamano de la RAM). En laptops
+    #    se deja intacta (es util al cerrar la tapa); en desktops sobra.
+    $esLaptop = $false
+    try {
+        $chasis = (Get-CimInstance -ClassName Win32_SystemEnclosure -EA Stop).ChassisTypes[0]
+        $esLaptop = ($chasis -in 9, 10, 14)
+    } catch { }
+    if ($esLaptop) {
+        Write-Log "Laptop detectada: hibernacion intacta" "SKIP"
+    } else {
+        if ($script:ModoSim) {
+            Write-Log "(SIMULACION) Hibernacion off (powercfg /hibernate off)" "SKIP"
+        } else {
+            try {
+                & powercfg.exe /hibernate off 2>&1 | Out-Null
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Log "Hibernacion deshabilitada (hiberfil.sys liberado)" "OK"
+                } else {
+                    Write-Log "powercfg /hibernate off devolvio $LASTEXITCODE" "ERROR"
+                }
+            } catch {
+                Write-Log "Hibernacion: $($_.Exception.Message)" "ERROR"
+            }
+        }
+        Invoke-RegAdd "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" "HibernateEnabled" "REG_DWORD" "0" "Hibernacion off (registro)"
+        Invoke-RegAdd "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FlyoutMenuSettings" "ShowHibernateOption" "REG_DWORD" "0" "Opcion Hibernar oculta en el menu"
+    }
+    Write-Log "Bloat de fabricante y seguridad aplicado" "OK"
 }
 
 # ================================================================
@@ -2402,6 +2478,7 @@ $secciones = [ordered]@{
     "12" = @{ Nombre = "Registros Adicionales"; Funcion = "Invoke-SeccionRegistros" }
     "13" = @{ Nombre = "Bloquear WPS Office";      Funcion = "Invoke-BloquearWPS" }
     "14" = @{ Nombre = "Importar .reg (Consola aqui + Visor clasico)"; Funcion = "Invoke-SeccionImportarReg" }
+    "15" = @{ Nombre = "Bloat de fabricante y seguridad"; Funcion = "Invoke-SeccionFabricantes" }
 }
 
 # Punto de restauracion
@@ -2412,10 +2489,20 @@ Write-Host "  Crear punto de restauracion?" -ForegroundColor Cyan
 $opRestore = Read-Respuesta "  [S/N]" ""
 if ($opRestore -eq "S" -or $opRestore -eq "s") {
     if (-not $script:ModoSim) {
-        Enable-ComputerRestore -Drive $env:SystemDrive -EA SilentlyContinue
-        Checkpoint-Computer -Description "Optimizador_WinScript" -RestorePointType "MODIFY_SETTINGS" -EA SilentlyContinue
+        # WinUtil: sin esta clave, Windows se salta la creacion si ya existe
+        # un punto de menos de 24 h (SystemRestorePointCreationFrequency) y
+        # el Checkpoint-Computer no hace nada. A 0 lo crea siempre.
+        Invoke-RegAdd "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore" "SystemRestorePointCreationFrequency" "REG_DWORD" "0" "Puntos de restauracion: sin limite de frecuencia"
+        try {
+            Enable-ComputerRestore -Drive $env:SystemDrive -EA Stop
+            Checkpoint-Computer -Description "Optimizador_WinScript" -RestorePointType "MODIFY_SETTINGS" -EA Stop
+            Write-Log "Punto de restauracion creado" "OK"
+        } catch {
+            Write-Log "Punto de restauracion no creado: $($_.Exception.Message)" "WARN"
+        }
+    } else {
+        Write-Log "(SIMULACION) Punto de restauracion omitido" "SKIP"
     }
-    Write-Log "Punto de restauracion creado" "OK"
 }
 
 # Seleccion de secciones

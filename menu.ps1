@@ -153,7 +153,7 @@ function Start-Herramienta {
 function Show-MenuPrincipal {
     $entradas = @(
         @{ Tecla = '1'; Nombre = 'Herramientas IT';     Desc = 'Suite de 11 utilidades de soporte' }
-        @{ Tecla = '2'; Nombre = 'Optimizador Windows'; Desc = 'Debloat y optimizacion (14 secciones)' }
+        @{ Tecla = '2'; Nombre = 'Optimizador Windows'; Desc = 'Debloat y optimizacion (15 secciones)' }
         @{ Tecla = '3'; Nombre = 'Asignar letra H:';    Desc = 'Fija el SSD externo en la unidad H:' }
         @{ Tecla = '0'; Nombre = 'Salir';              Desc = 'Vuelve a la consola' }
     )
