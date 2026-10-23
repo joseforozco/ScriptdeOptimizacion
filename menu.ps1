@@ -2,11 +2,11 @@
 # menu.ps1 - "Kit de Herramientas - José Orozco" (entrada unica)
 # ============================================================================
 # Dos formas de arrancarlo:
-#   1) Local  :  .\menu.ps1   (carpeta completa clonada o descargada)
-#   2) Remoto :  iex ((irm 'https://raw.githubusercontent.com/joseforozco/ScriptdeOptimizacion/main/menu.ps1').TrimStart([char]0xFEFF))
-#      (el TrimStart quita la marca BOM del inicio del fichero servido)
-#      En modo remoto el menu descarga los 3 scripts a una carpeta temporal
-#      y funciona exactamente igual que en local.
+#   1) Local  :  .\menu.ps1  o .\start.ps1  (carpeta clonada o descargada)
+#   2) Remoto :  irm https://raw.githubusercontent.com/joseforozco/ScriptdeOptimizacion/main/start.ps1 | iex
+#      (start.ps1, ASCII sin BOM, es la entrada del one-liner: baja los
+#      scripts y lanza este menu. Este menu tambien sabe bajarlos por si
+#      alguien lo sirve a el directamente.)
 #
 # - El menu vive en ESTA consola: cada herramienta se abre en su propia
 #   ventana y, al cerrarla, se vuelve aqui automaticamente.

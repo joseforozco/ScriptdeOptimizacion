@@ -6,12 +6,8 @@ equipos **Windows 10 y 11**, orientadas a trabajo de soporte IT.
 ## Uso rápido (una sola línea)
 
 ```powershell
-iex ((irm 'https://raw.githubusercontent.com/joseforozco/ScriptdeOptimizacion/main/menu.ps1').TrimStart([char]0xFEFF))
+irm https://raw.githubusercontent.com/joseforozco/ScriptdeOptimizacion/main/start.ps1 | iex
 ```
-
-El `TrimStart` elimina la marca BOM del fichero servido (sin él, un
-`irm <url> | iex` directo también funciona, pero imprime un aviso inofensivo
-al arrancar).
 
 El menú se abre en la consola actual y cada herramienta se lanza en su propia
 ventana; al cerrarla se vuelve al menú. En este modo remoto los scripts se
@@ -33,6 +29,7 @@ Opción B — descargar el ZIP desde GitHub, extraerlo y ejecutar `menu.ps1`.
 
 | Script | Qué hace | Motor |
 |---|---|---|
+| `start.ps1` | Entrada remota para el one-liner (`irm … \| iex`); descarga los scripts y lanza el menú | 5.1 y 7 |
 | `menu.ps1` | Menú principal del Kit | Windows PowerShell 5.1 y PowerShell 7 |
 | `HerramientasIT.ps1` | Suite de 11 utilidades de soporte: bloqueo de software (Autodesk, WPS), borrado por años, duplicados, reporte NAS, organización de fuentes, reubicación de instaladores, reparación de perfil y más | PowerShell 7 (se valida e instala solo si falta) |
 | `optimizador.ps1` | Debloat y optimización en 14 secciones, con modo simulación para revisar antes de aplicar | PowerShell 7 (se valida e instala solo si falta) |
