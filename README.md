@@ -6,8 +6,12 @@ equipos **Windows 10 y 11**, orientadas a trabajo de soporte IT.
 ## Uso rápido (una sola línea)
 
 ```powershell
-irm https://raw.githubusercontent.com/joseforozco/ScriptdeOptimizacion/main/menu.ps1 | iex
+iex ((irm 'https://raw.githubusercontent.com/joseforozco/ScriptdeOptimizacion/main/menu.ps1').TrimStart([char]0xFEFF))
 ```
+
+El `TrimStart` elimina la marca BOM del fichero servido (sin él, un
+`irm <url> | iex` directo también funciona, pero imprime un aviso inofensivo
+al arrancar).
 
 El menú se abre en la consola actual y cada herramienta se lanza en su propia
 ventana; al cerrarla se vuelve al menú. En este modo remoto los scripts se

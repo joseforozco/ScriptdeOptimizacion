@@ -3,8 +3,9 @@
 # ============================================================================
 # Dos formas de arrancarlo:
 #   1) Local  :  .\menu.ps1   (carpeta completa clonada o descargada)
-#   2) Remoto :  irm https://raw.githubusercontent.com/joseforozco/ScriptdeOptimizacion/main/menu.ps1 | iex
-#      En modo remoto el menu descarga los 4 scripts a una carpeta temporal
+#   2) Remoto :  iex ((irm 'https://raw.githubusercontent.com/joseforozco/ScriptdeOptimizacion/main/menu.ps1').TrimStart([char]0xFEFF))
+#      (el TrimStart quita la marca BOM del inicio del fichero servido)
+#      En modo remoto el menu descarga los 3 scripts a una carpeta temporal
 #      y funciona exactamente igual que en local.
 #
 # - El menu vive en ESTA consola: cada herramienta se abre en su propia
@@ -68,7 +69,7 @@ function Get-RaizHerramientas {
     # Modo local: menu.ps1 esta en disco (carpeta clonada o copiada a mano).
     if ($PSScriptRoot) { return $PSScriptRoot }
 
-    # Modo remoto (irm | iex): no hay carpeta local; se bajan los 4 scripts
+    # Modo remoto (irm | iex): no hay carpeta local; se bajan los 3 scripts
     # desde GitHub a un temporal. Si la descarga falla y estan en el
     # directorio actual, se usa ese como plan B.
     $destino = Join-Path ([System.IO.Path]::GetTempPath()) 'KitHerramientas'
