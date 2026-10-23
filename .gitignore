@@ -1,0 +1,27 @@
+# ==========================================================================
+# LOCAL-ONLY: viven en la carpeta pero NO se publican en GitHub
+# ==========================================================================
+/winscript.ps1
+/AsignaPerfilD.ps1
+/contexto.txt
+/tasklist.txt
+
+# Material de referencia de terceros
+/winutil-main/
+
+# Informes de auditoría generados (datos de máquinas propias)
+/Seguridad/informes/
+
+# Documentación de apoyo del proyecto Auditoría (sesiones y datos propios)
+/Seguridad/contexto.txt
+/Seguridad/tasklist.txt
+/Seguridad/contexto/
+
+# Repo anidado de HardeningKitty: sus ficheros SÍ se suben, su .git no
+/Seguridad/tools/windows_hardening/.git/
+
+# Varios
+*.bak
+*.log
+Thumbs.db
+desktop.ini

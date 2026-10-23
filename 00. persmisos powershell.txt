@@ -1,0 +1,6 @@
+Set-ExecutionPolicy Unrestricted
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
+Set-ExecutionPolicy Restricted
+
+Set-ExecutionPolicy Unrestricted -Scope Process -Force

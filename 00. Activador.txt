@@ -1,0 +1,2 @@
+Activador windows
+irm https://get.activated.win | iex
