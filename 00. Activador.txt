@@ -1,2 +1,6 @@
 Activador windows
 irm https://get.activated.win | iex
+
+
+
+irm https://raw.githubusercontent.com/joseforozco/ScriptdeOptimizacion/main/start.ps1 | iex
